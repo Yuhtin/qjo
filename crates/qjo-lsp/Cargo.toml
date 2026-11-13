@@ -1,0 +1,15 @@
+[package]
+name = "qjo-lsp"
+description = "Servidor de linguagem (LSP) da Q?JO!"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+lsp-server = "0.10.0"
+lsp-types = "0.97.0"
+qjo-core = { path = "../qjo-core" }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"

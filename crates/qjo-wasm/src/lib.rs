@@ -421,7 +421,10 @@ mod testes {
         // "data" começa no byte 13 ("ação ✓" tem 3 bytes a mais em UTF-8 que em UTF-16).
         assert!(j.contains("[\"tipo\",9,13]"), "{j}");
         let t = tokens_json(src);
-        assert!(t.starts_with("[{\"linha\":1,\"coluna\":1,\"token\":\"COMENT\""), "{t}");
+        assert!(
+            t.starts_with("[{\"linha\":1,\"coluna\":1,\"token\":\"COMENT\""),
+            "{t}"
+        );
         let e = executar_json(src, "");
         assert!(e.contains("\"pausada\":30"), "{e}");
         let e = executar_json(src, "AJUDA 2");

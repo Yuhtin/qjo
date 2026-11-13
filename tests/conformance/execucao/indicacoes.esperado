@@ -1,0 +1,16 @@
+ROTINA R
+ETAPA A
+INDICAR o
+INDICAR p
+INDICAR o
+PARAR_INDICACAO p
+INDICAR p
+PARAR_INDICACAO o (fim da etapa)
+PARAR_INDICACAO p (fim da etapa)
+INDICAR o
+ETAPA B
+INSTRUIR m
+PARAR_INDICACAO o (fim da etapa)
+INDICAR p
+PARAR_INDICACAO p (fim da rotina)
+FIM concluida

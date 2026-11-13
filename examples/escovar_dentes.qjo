@@ -1,0 +1,45 @@
+# Três tentativas para pegar a escova; a ajuda muda a orientação.
+data manha = data"07:15:00";
+objeto escova = "Copo com a escova";
+objeto pasta = "Pasta de dente na pia";
+mensagem msg_escova = "Pegue a escova de dente.";
+mensagem msg_dica = "A escova está no copo azul, ao lado da torneira.";
+mensagem msg_pasta = "Coloque um pouco de pasta na escova.";
+
+rotina("Escovar os dentes", manha) {
+    etapa("Pegar a escova") {
+        INDICAR(escova);
+        logico pegou = falso;
+        para (num tentativa = 1; tentativa <= 3 && !pegou; tentativa = tentativa + 1) {
+            q? (tentativa == 1) {
+                INSTRUIR(msg_escova);
+            } jo! {
+                INSTRUIR(msg_dica);
+            }
+            resultado r = AGUARDAR_CONFIRMACAO(45s);
+            q? (r == CONFIRMADO) {
+                pegou = verdadeiro;
+                q? (TEMPO_DE_RESPOSTA() < 10s) {
+                    REGISTRAR(CONFIRMACAO_RAPIDA);
+                }
+            } qjo? (r == AJUDA) {
+                ALERTAR(BAIXA);
+            } jo! {
+                ALERTAR(MEDIA);
+                ESPERAR(5s);
+            }
+        }
+        q? (!pegou) {
+            REGISTRAR(ETAPA_PULADA);
+            retorna;
+        }
+    }
+    etapa("Colocar a pasta") {
+        INDICAR(pasta);
+        INSTRUIR(msg_pasta);
+        resultado r = AGUARDAR_CONFIRMACAO(1min);
+        q? (r == TEMPO_ESGOTADO) {
+            REGISTRAR(ETAPA_PULADA);
+        }
+    }
+}

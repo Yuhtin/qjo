@@ -1,0 +1,7 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+rotina("R", h) {
+    etapa(Calcar) {
+        INSTRUIR(m);
+    }
+}

@@ -1,0 +1,7 @@
+2:2 TIPO texto
+2:8 ID t
+2:10 ATRIBUICAO =
+2:12 TEXTO "ação ✓"
+2:20 PONTOVIRGULA ;
+4:1 ID x
+erro 2:22 E_LEX_SIMBOLO

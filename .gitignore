@@ -1,0 +1,8 @@
+target/
+node_modules/
+dist/
+*.vsix
+.vercel/
+.DS_Store
+/editors/vscode/server/
+/web/public/qjo.wasm

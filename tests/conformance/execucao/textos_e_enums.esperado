@@ -1,0 +1,7 @@
+ROTINA Rotina "especial"
+com quebra
+REGISTRAR ETAPA_PULADA
+REGISTRAR AJUDA_REPETIDA
+ETAPA Etapa? ação
+INSTRUIR m
+FIM concluida

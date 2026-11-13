@@ -1,0 +1,30 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+objeto p = "Porta";
+mensagem um = "1";
+mensagem dois = "2";
+funcao num f(mensagem x, num v) {
+    INSTRUIR(x);
+    retorna v;
+}
+funcao logico diz(mensagem x) {
+    INSTRUIR(x);
+    retorna verdadeiro;
+}
+rotina("R", h) {
+    num s = f(um, 1) + f(dois, 2);
+    num t = f(um, f(dois, 3));
+    q? (f(um, 1) < f(dois, 2)) {
+        REGISTRAR(ETAPA_PULADA);
+    }
+    q? (falso && diz(um)) {
+        INSTRUIR(m);
+    }
+    q? (verdadeiro || diz(dois)) {
+        REGISTRAR(AJUDA_REPETIDA);
+    }
+    q? (diz(um) && diz(dois)) {
+        REGISTRAR(CONFIRMACAO_RAPIDA);
+    }
+}

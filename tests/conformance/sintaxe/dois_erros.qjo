@@ -1,0 +1,10 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+rotina("R", h) {
+    num x = ;
+    INSTRUIR(m);
+    q? x > 1 {
+        ESPERAR(1s);
+    }
+    num y = 2 +;
+}

@@ -1,0 +1,15 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+funcao a(num n) {
+    b(n);
+}
+funcao b(num n) {
+    a(n);
+}
+funcao num c(num n) {
+    retorna c(n);
+}
+rotina("R", h) {
+    INSTRUIR(m);
+}

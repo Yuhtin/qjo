@@ -1,0 +1,17 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+rotina("R", h) {
+    q? (h < 3) {
+        INSTRUIR(m);
+    }
+    q? ("a" < "b") {
+        INSTRUIR(m);
+    }
+    q? (m == o) {
+        INSTRUIR(m);
+    }
+    q? (AGORA() >= h && 2s > 1s && "a" != "b") {
+        INSTRUIR(m);
+    }
+}

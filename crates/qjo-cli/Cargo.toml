@@ -1,0 +1,15 @@
+[package]
+name = "qjo-cli"
+description = "Linha de comando da linguagem Q?JO!: check, run, build, tokens, fmt"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "qjo"
+path = "src/main.rs"
+
+[dependencies]
+qjo-core = { path = "../qjo-core" }

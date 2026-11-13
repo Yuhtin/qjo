@@ -1,0 +1,13 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+mensagem m2 = "a";
+objeto m2 = "b";
+rotina("R", h) {
+    num x = 1;
+    etapa("E") {
+        num x = 2;
+        logico INDICAR = falso;
+    }
+    num m = 3;
+}

@@ -1,0 +1,18 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+objeto p = "Porta";
+rotina("R", h) {
+    etapa("A") {
+        INDICAR(o);
+        INDICAR(p);
+        INDICAR(o);
+        PARAR_INDICACAO(p);
+        INDICAR(p);
+    }
+    INDICAR(o);
+    etapa("B") {
+        INSTRUIR(m);
+    }
+    INDICAR(p);
+}

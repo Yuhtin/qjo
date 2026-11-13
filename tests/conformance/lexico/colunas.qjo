@@ -1,0 +1,4 @@
+#! modo: tokens
+	texto t = "ação ✓"; @
+# comentário até o fim
+x

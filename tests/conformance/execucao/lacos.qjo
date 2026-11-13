@@ -1,0 +1,25 @@
+#! respostas: AJUDA 1, AJUDA 1, CONFIRMADO 2
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+objeto p = "Porta";
+rotina("R", h) {
+    num n = 0;
+    faca {
+        n = n + 1;
+    } enquanto (falso);
+    q? (n == 1) {
+        REGISTRAR(ETAPA_PULADA);
+    }
+    enquanto (n < 3) {
+        n = n + 1;
+        ALERTAR(MEDIA);
+    }
+    resultado r = nulo;
+    faca {
+        r = AGUARDAR_CONFIRMACAO(20s);
+    } enquanto (r != CONFIRMADO);
+    para (num i = 3; i > 0; i = i - 1) {
+        ESPERAR(1s);
+    }
+}

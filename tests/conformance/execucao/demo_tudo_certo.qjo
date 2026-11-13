@@ -1,0 +1,36 @@
+#! respostas: CONFIRMADO 4, CONFIRMADO 7
+# Pegar a camisa e a blusa. Se a pessoa não confirmar, a rotina é cancelada:
+# não há segunda tentativa.
+data horario = data"08:00:00";
+objeto camisa = "Gaveta das camisas";
+objeto blusa = "Cabide das blusas";
+mensagem msg_camisa = "Pegue a camisa.";
+mensagem msg_blusa = "Pegue a blusa.";
+mensagem msg_cancela = "Rotina cancelada.";
+
+rotina("Pegar a roupa", horario) {
+    etapa("Pegar a camisa") {
+        INDICAR(camisa);
+        INSTRUIR(msg_camisa);
+        resultado r = AGUARDAR_CONFIRMACAO(1min);
+        PARAR_INDICACAO(camisa);
+        q? (r != CONFIRMADO) {
+            ALERTAR(ALTA);
+            INSTRUIR(msg_cancela);
+            REGISTRAR(ROTINA_INCOMPLETA);
+            retorna;
+        }
+    }
+    etapa("Pegar a blusa") {
+        INDICAR(blusa);
+        INSTRUIR(msg_blusa);
+        resultado r = AGUARDAR_CONFIRMACAO(1min);
+        PARAR_INDICACAO(blusa);
+        q? (r != CONFIRMADO) {
+            ALERTAR(ALTA);
+            INSTRUIR(msg_cancela);
+            REGISTRAR(ROTINA_INCOMPLETA);
+            retorna;
+        }
+    }
+}

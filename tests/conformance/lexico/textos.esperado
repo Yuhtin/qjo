@@ -1,0 +1,10 @@
+2:1 TEXTO "Ação concluída"
+2:18 TEXTO "# não é comentário"
+2:39 TEXTO "Diga \"sim\""
+2:54 TEXTO "a\\b"
+2:61 TEXTO "linha\nnova"
+2:75 TEXTO ""
+5:1 ID x
+erro 3:3 E_LEX_ESCAPE
+erro 3:16 E_LEX_ESCAPE
+erro 4:1 E_LEX_TEXTO

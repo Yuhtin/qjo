@@ -1,0 +1,23 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+data dia = data"2026-11-05 23:00:00";
+rotina("R", dia) {
+    q? (AGORA() == dia) {
+        REGISTRAR(ETAPA_PULADA);
+    }
+    q? (AGORA() > data"22:59:59" && AGORA() < data"2026-11-06 00:00:00") {
+        REGISTRAR(AJUDA_REPETIDA);
+    }
+    ESPERAR(1h);
+    q? (AGORA() < data"00:30:00") {
+        REGISTRAR(CONFIRMACAO_RAPIDA);
+    }
+    q? (data"08:00:00" == data"2020-01-01 08:00:00") {
+        REGISTRAR(ROTINA_INCOMPLETA);
+    }
+}
+rotina("Hora", h) {
+    q? (AGORA() == data"2026-11-05 08:00:00") {
+        REGISTRAR(ETAPA_PULADA);
+    }
+}

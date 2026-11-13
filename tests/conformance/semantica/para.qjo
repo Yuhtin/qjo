@@ -1,0 +1,11 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+rotina("R", h) {
+    para (logico i = falso; i; i = !i) {
+        INSTRUIR(m);
+    }
+    para (num j = 0; j < 3; k = j + 1) {
+        INSTRUIR(m);
+    }
+}

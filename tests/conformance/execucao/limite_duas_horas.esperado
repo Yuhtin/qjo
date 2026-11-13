@@ -1,0 +1,9 @@
+ROTINA R
+ESPERAR 3600s
+ESPERAR 3600s
+INSTRUIR m
+ESPERAR 1s
+FIM erro: a rotina excedeu o limite de duas horas
+ROTINA Depois
+INSTRUIR m
+FIM concluida

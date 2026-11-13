@@ -1,0 +1,14 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+rotina("R", h) {
+    num x = "três";
+    ALERTAR(1);
+    INDICAR(m);
+    INSTRUIR(m, m);
+    logico b = 1 + verdadeiro;
+    duracao d = 2min * 3 + 1;
+    q? (x) {
+        ESPERAR(1s);
+    }
+}

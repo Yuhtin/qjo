@@ -1,0 +1,9 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+num tentativas = 0;
+objeto vazio = "";
+mensagem nada = 5;
+data quando = AGORA();
+rotina("R", h) {
+    INSTRUIR(m);
+}

@@ -1,0 +1,12 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+objeto p = "Porta";
+rotina("R", h) {
+    etapa("E") {
+        INDICAR(o);
+        num z = 0;
+        num w = 1 % z;
+        INSTRUIR(m);
+    }
+}

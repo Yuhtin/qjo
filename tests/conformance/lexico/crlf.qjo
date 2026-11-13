@@ -1,0 +1,4 @@
+#! modo: tokens
+num x = 1;
+  x = 2;
+yz

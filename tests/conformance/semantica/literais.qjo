@@ -1,0 +1,9 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+rotina("R", h) {
+    duracao d = 2147483648s;
+    data x = data"2026-02-29 08:00:00";
+    data y = data"2024-02-29 24:00:00";
+    data z = data"2024-02-29 23:59:59";
+}

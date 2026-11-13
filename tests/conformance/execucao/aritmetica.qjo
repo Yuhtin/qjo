@@ -1,0 +1,21 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+objeto p = "Porta";
+rotina("R", h) {
+    num a = -7;
+    num b = 2;
+    q? (a / b == -3) {
+        REGISTRAR(ETAPA_PULADA);
+    }
+    q? (a % 3 == -1 && 7 % -3 == 1) {
+        REGISTRAR(AJUDA_REPETIDA);
+    }
+    duracao d = 1min30s;
+    q? (d / 4 == 22s && d * 2 == 3min && 2 * d - 1min == 2min) {
+        REGISTRAR(CONFIRMACAO_RAPIDA);
+    }
+    num z = 0;
+    num w = 10 / z;
+    INSTRUIR(m);
+}

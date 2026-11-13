@@ -1,0 +1,9 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+rotina("R", h) {
+    o = nulo;
+    CONFIRMADO = AJUDA;
+    INSTRUIR = 1;
+    h = AGORA();
+}

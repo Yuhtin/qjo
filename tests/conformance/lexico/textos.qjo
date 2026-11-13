@@ -1,0 +1,5 @@
+#! modo: tokens
+"Ação concluída" "# não é comentário" "Diga \"sim\"" "a\\b" "linha\nnova" ""
+"a\tb" "caminho\q"
+"sem fim;
+x

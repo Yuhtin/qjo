@@ -1,0 +1,5 @@
+ROTINA R
+ETAPA Loop
+INDICAR o
+PARAR_INDICACAO o (fim da etapa)
+FIM erro: possível laço sem fim (limite de passos)

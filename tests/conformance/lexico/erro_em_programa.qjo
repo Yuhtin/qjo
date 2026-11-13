@@ -1,0 +1,12 @@
+data horario = data"07:30:00";
+mensagem msg = "Calce as meias.;
+
+rotina("Meias", horario) {
+    etapa("Calçar") {
+        INSTRUIR(msg);
+        resultado r = AGUARDAR_CONFIRMACAO(30seg);
+        q? (r @ CONFIRMADO) {
+            REGISTRAR(CONFIRMACAO_RAPIDA);
+        }
+    }
+}

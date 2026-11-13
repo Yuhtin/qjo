@@ -1,0 +1,20 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+funcao num f(num x) {
+    q? (x > 0) {
+        retorna 1;
+    }
+}
+funcao g() {
+    retorna 2;
+}
+funcao num k() {
+    retorna;
+}
+funcao logico p() {
+    retorna 3;
+}
+rotina("R", h) {
+    retorna 1;
+}

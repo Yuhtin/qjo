@@ -1,0 +1,11 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+rotina("R", h) {
+    num a = 1 / 0;
+    num b = 2147483647 + 1;
+    num c = 5;
+    num d = c % 0;
+    duracao e = 1s - 2s;
+    num f = c / (2 - 2);
+}

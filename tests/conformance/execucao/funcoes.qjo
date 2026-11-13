@@ -1,0 +1,31 @@
+#! respostas: AJUDA 3, CONFIRMADO 9
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+objeto p = "Porta";
+funcao lembrar(num vezes) {
+    para (num i = 0; i < vezes; i = i + 1) {
+        ALERTAR(BAIXA);
+    }
+    q? (vezes > 1) {
+        retorna;
+    }
+    INSTRUIR(m);
+}
+funcao resultado perguntar(duracao d) {
+    INDICAR(o);
+    retorna AGUARDAR_CONFIRMACAO(d);
+}
+rotina("R", h) {
+    etapa("E") {
+        lembrar(1);
+        lembrar(2);
+        resultado r = perguntar(30s);
+        q? (r == AJUDA && TEMPO_DE_RESPOSTA() == 3s) {
+            r = perguntar(1min);
+        }
+        q? (TEMPO_DE_RESPOSTA() == 9s) {
+            REGISTRAR(CONFIRMACAO_RAPIDA);
+        }
+    }
+}

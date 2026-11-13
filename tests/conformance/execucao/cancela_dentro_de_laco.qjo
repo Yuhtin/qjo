@@ -1,0 +1,16 @@
+#! respostas: CONFIRMADO 1, AJUDA 1
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+objeto p = "Porta";
+rotina("R", h) {
+    INDICAR(p);
+    etapa("E") {
+        INDICAR(o);
+        para (num i = 0; i < 5; i = i + 1) {
+            q? (AGUARDAR_CONFIRMACAO(10s) == AJUDA) {
+                retorna;
+            }
+        }
+    }
+}

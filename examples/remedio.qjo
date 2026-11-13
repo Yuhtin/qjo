@@ -1,0 +1,51 @@
+# Enum próprio, função com retorno e laço faca … enquanto.
+enum Turno { MANHA, TARDE, NOITE }
+
+data almoco = data"2026-11-12 12:30:00";
+objeto caixa = "Caixa de remédios";
+mensagem msg_remedio = "Tome o remédio da caixa.";
+mensagem msg_agua = "Beba um copo de água.";
+
+funcao duracao limite_para(Turno t) {
+    q? (t == NOITE) {
+        retorna 2min;
+    }
+    retorna 1min30s;
+}
+
+funcao lembrar(num vezes) {
+    para (num i = 0; i < vezes; i = i + 1) {
+        ALERTAR(BAIXA);
+        ESPERAR(10s);
+    }
+}
+
+rotina("Remédio do almoço", almoco) {
+    etapa("Tomar o remédio") {
+        Turno agora = TARDE;
+        num pedidos_ajuda = 0;
+        resultado r = nulo;
+        INDICAR(caixa);
+        faca {
+            INSTRUIR(msg_remedio);
+            r = AGUARDAR_CONFIRMACAO(limite_para(agora));
+            q? (r == AJUDA) {
+                pedidos_ajuda = pedidos_ajuda + 1;
+                lembrar(pedidos_ajuda);
+            }
+        } enquanto (r == AJUDA && pedidos_ajuda < 3);
+        q? (pedidos_ajuda > 1) {
+            REGISTRAR(AJUDA_REPETIDA);
+        }
+        q? (r != CONFIRMADO) {
+            REGISTRAR(ROTINA_INCOMPLETA);
+        }
+    }
+    etapa("Beber água") {
+        INSTRUIR(msg_agua);
+        ESPERAR(30s);
+        q? (AGORA() > data"12:30:00") {
+            REGISTRAR(CONFIRMACAO_RAPIDA);
+        }
+    }
+}

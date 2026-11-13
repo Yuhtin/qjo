@@ -1,0 +1,13 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+enum Turno { MANHA, NOITE, MANHA }
+enum Nivel { BAIXA, TOPO }
+rotina("R", h) {
+    Turno t = MANHA;
+    Cor c = AZUL;
+    q? (t == ALTA) {
+        INSTRUIR(m);
+    }
+    enum e = MANHA;
+}

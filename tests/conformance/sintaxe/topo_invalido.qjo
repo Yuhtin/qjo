@@ -1,0 +1,6 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+INSTRUIR(m);
+rotina("R", h) {
+    INSTRUIR(m);
+}

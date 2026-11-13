@@ -1,0 +1,19 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+objeto p = "Porta";
+enum Turno { MANHA, TARDE }
+rotina("Rotina \"especial\"\ncom quebra", h) {
+    texto a = "café";
+    Turno t = TARDE;
+    q? (a == "café" && t != MANHA) {
+        REGISTRAR(ETAPA_PULADA);
+    }
+    a = "chá";
+    q? (a != "café") {
+        REGISTRAR(AJUDA_REPETIDA);
+    }
+    etapa("Etapa? ação") {
+        INSTRUIR(m);
+    }
+}

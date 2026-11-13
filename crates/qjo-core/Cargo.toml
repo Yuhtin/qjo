@@ -1,0 +1,10 @@
+[package]
+name = "qjo-core"
+description = "Léxico, sintaxe, semântica, interpretador e gerador C++ da linguagem Q?JO!"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]

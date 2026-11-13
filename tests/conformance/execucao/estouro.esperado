@@ -1,0 +1,10 @@
+ROTINA Num
+INSTRUIR m
+FIM erro: estouro de num
+ROTINA Menos
+INSTRUIR m
+FIM erro: estouro de num
+ROTINA Duracao
+FIM erro: duração negativa
+ROTINA Grande
+FIM erro: estouro de duração

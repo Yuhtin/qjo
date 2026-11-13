@@ -1,0 +1,14 @@
+data h = data"08:00:00";
+mensagem m = "Oi";
+objeto o = "Caixa";
+objeto p = "Porta";
+rotina("R", h) {
+    ESPERAR(1h);
+    ESPERAR(1h);
+    INSTRUIR(m);
+    ESPERAR(1s);
+    INSTRUIR(m);
+}
+rotina("Depois", h) {
+    INSTRUIR(m);
+}

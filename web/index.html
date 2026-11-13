@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Q?JO! · playground</title>
+    <meta name="description" content="Escreva, rode e compile para C++ rotinas assistivas na linguagem Q?JO!, direto no navegador." />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f6f1e4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1c1915" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f2c230'/%3E%3Ctext x='16' y='23.5' font-family='Arial,sans-serif' font-weight='900' font-size='21' text-anchor='middle' fill='%23332714'%3E%3F%3C/text%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topo">
+        <a class="marca" href="./" aria-label="Q?JO! — início">
+          <span class="logo" aria-hidden="true">Q<span class="logo-p">?</span>JO<span class="logo-p">!</span></span>
+        </a>
+        <p class="lema">Uma linguagem pequena para descrever rotinas assistivas, passo a passo.</p>
+        <nav class="links" aria-label="Links do projeto">
+          <a href="https://github.com/Yuhtin/qjo/tree/main/spec" target="_blank" rel="noopener">Especificação</a>
+          <a href="https://github.com/Yuhtin/qjo" target="_blank" rel="noopener" class="link-gh">
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            GitHub
+          </a>
+        </nav>
+      </header>
+
+      <main class="area" id="area" data-aba="sim">
+        <div class="abas" role="tablist" aria-label="Painéis">
+          <button role="tab" class="aba" data-alvo="biblioteca" aria-controls="p-biblioteca" aria-selected="false">Arquivos</button>
+          <button role="tab" class="aba" data-alvo="editor" aria-controls="p-editor" aria-selected="false">Código</button>
+          <button role="tab" class="aba" data-alvo="sim" aria-controls="p-sim" aria-selected="true">Simulador</button>
+          <button role="tab" class="aba" data-alvo="cpp" aria-controls="p-cpp" aria-selected="false">C++</button>
+        </div>
+
+        <aside class="painel biblioteca" id="p-biblioteca" role="tabpanel" aria-label="Arquivos">
+          <section class="grupo">
+            <h2 class="rotulo">Exemplos</h2>
+            <ul class="lista" id="lista-exemplos"></ul>
+          </section>
+          <section class="grupo">
+            <h2 class="rotulo">Exercícios <span class="contador" id="contador"></span></h2>
+            <ul class="lista" id="lista-exercicios"></ul>
+          </section>
+          <section class="grupo grupo-esboco">
+            <h2 class="rotulo">Esboço</h2>
+            <ul class="esboco" id="esboco"></ul>
+          </section>
+        </aside>
+
+        <section class="painel editor-col" id="p-editor" role="tabpanel" aria-label="Código">
+          <details class="cartao exercicio" id="exercicio" open hidden>
+            <summary class="ex-cab">
+              <span class="ex-tema" id="ex-tema"></span>
+              <h2 class="ex-titulo" id="ex-titulo"></h2>
+              <span class="selo selo-ok" id="ex-resolvido" hidden>Resolvido</span>
+              <svg class="ex-seta" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </summary>
+            <div class="ex-corpo">
+              <div class="ex-texto" id="ex-texto"></div>
+              <div class="ex-acoes">
+                <button class="btn btn-destaque" id="verificar" type="button">Verificar</button>
+                <span class="ex-resumo" id="ex-resumo" role="status"></span>
+              </div>
+              <ul class="casos" id="casos"></ul>
+            </div>
+          </details>
+
+          <div class="cartao editor-cartao">
+            <div class="barra">
+              <div class="arquivo">
+                <span class="arquivo-nome" id="arquivo-nome"></span>
+                <span class="selo" id="editado" hidden>editado</span>
+              </div>
+              <div class="acoes">
+                <button class="btn btn-fantasma" id="restaurar" type="button" hidden>Restaurar</button>
+                <button class="btn" id="formatar" type="button" title="Formatar (Shift+Alt+F)">Formatar</button>
+                <button class="btn btn-primario" id="rodar" type="button">Rodar <kbd class="atalho" data-atalho="enter"></kbd></button>
+              </div>
+            </div>
+            <div class="cm-host" id="cm"></div>
+            <div class="status">
+              <button class="status-diag" id="status-diag" type="button"></button>
+              <span class="status-dica" id="status-dica"></span>
+            </div>
+          </div>
+        </section>
+
+        <section class="painel sim" id="p-sim" role="tabpanel" aria-label="Simulador">
+          <div class="cartao sim-cartao">
+            <div class="cab">
+              <p class="sim-estado" id="sim-estado" role="status"><span class="ponto"></span><span id="sim-estado-texto">Pronto para rodar</span></p>
+              <button class="btn btn-fantasma" id="reiniciar" type="button" disabled>Reiniciar</button>
+            </div>
+            <div class="sim-corpo" id="sim-corpo">
+              <div class="vazio" id="sim-vazio">
+                <p>Rode a rotina para ver o registro linha por linha. Quando ela esperar uma confirmação, você escolhe a resposta.</p>
+                <button class="btn btn-primario" id="rodar-vazio" type="button">Rodar <kbd class="atalho" data-atalho="enter"></kbd></button>
+              </div>
+              <div class="aviso-sim" id="sim-aviso" hidden></div>
+              <ol class="registro" id="registro" aria-live="polite"></ol>
+              <div class="resumo" id="resumo" hidden></div>
+            </div>
+            <div class="sim-mudou" id="sim-mudou" hidden>
+              <span>O código mudou desde a última execução.</span>
+              <button class="btn" id="rodar-de-novo" type="button">Rodar de novo</button>
+            </div>
+            <form class="pergunta" id="pergunta" hidden>
+              <div class="pergunta-cab">
+                <span class="pulso" aria-hidden="true"></span>
+                <p class="pergunta-texto" id="pergunta-texto"></p>
+              </div>
+              <label class="segundos">
+                <span>Respondeu em</span>
+                <input id="segundos" type="number" inputmode="numeric" min="0" step="1" value="3" aria-describedby="segundos-max" />
+                <span>segundos</span>
+                <span class="segundos-max" id="segundos-max"></span>
+              </label>
+              <div class="respostas">
+                <button class="btn resp resp-ok" type="submit" value="CONFIRMADO">CONFIRMADO</button>
+                <button class="btn resp resp-ajuda" type="submit" value="AJUDA">AJUDA</button>
+                <button class="btn resp resp-tempo" type="submit" value="TEMPO_ESGOTADO">TEMPO_ESGOTADO</button>
+              </div>
+            </form>
+            <div class="usadas" id="usadas" hidden>
+              <span class="usadas-rotulo">Respostas</span>
+              <ol class="usadas-lista" id="usadas-lista"></ol>
+              <button class="btn btn-fantasma btn-mini" id="desfazer" type="button">Desfazer</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="painel cpp" id="p-cpp" role="tabpanel" aria-label="C++">
+          <div class="cartao cpp-cartao">
+            <div class="cab">
+              <h2 class="cab-titulo">rotina.cpp <span class="cab-sub">C++17</span></h2>
+              <div class="acoes">
+                <button class="btn" id="cpp-copiar" type="button">Copiar</button>
+                <button class="btn" id="cpp-baixar" type="button" aria-label="Baixar rotina.cpp">Baixar</button>
+              </div>
+            </div>
+            <div class="cpp-info">
+              <div class="comando">
+                <code id="cpp-comando">g++ -std=c++17 -O2 -o rotina rotina.cpp</code>
+                <button class="btn btn-fantasma btn-mini" id="cpp-copiar-cmd" type="button" aria-label="Copiar o comando de compilação">Copiar</button>
+              </div>
+              <p class="nota">O programa lê as respostas da entrada padrão, uma por linha, como <code>CONFIRMADO 3</code>. Quando a entrada acaba, cada espera vira <code>TEMPO_ESGOTADO</code>.</p>
+              <p class="nota" id="cpp-repetir" hidden></p>
+            </div>
+            <pre class="cpp-codigo" id="cpp-codigo" tabindex="0" aria-label="Código C++ gerado"></pre>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div class="aviso-flutuante" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

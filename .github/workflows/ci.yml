@@ -42,3 +42,23 @@ jobs:
       - run: npm run build && npm run servidor
       - run: xvfb-run -a node test/run.mjs
       - run: npx vsce package --target linux-x64 -o qjo-linux-x64.vsix
+
+  web:
+    name: Site
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run build

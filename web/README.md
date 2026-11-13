@@ -1,9 +1,13 @@
 # QueijoCode
 
+**No ar:** [qjo.daviduarte.com.br](https://qjo.daviduarte.com.br)
+
 Editor, simulador, exercícios e gerador de C++ da Q?JO! no navegador. Vite + TypeScript +
 CodeMirror 6. O compilador é o próprio `qjo-core`, compilado para WebAssembly (`crates/qjo-wasm`).
 
-O visual é o da QueijoCode original (qjo.daviduarte.com.br): o mesmo layout, as mesmas cores e
+![QueijoCode no modo exercício, com os testes passando](../docs/imagens/exercicio.png)
+
+O visual é o da QueijoCode original: o mesmo layout, as mesmas cores e
 os mesmos componentes, copiados em `src/estilo.css`. Só o editor mudou por dentro: é o
 CodeMirror com o desenho do editor antigo, o que traz autocompletar, dica ao passar o mouse e
 ir à definição (Cmd/Ctrl+clique ou F12). Shift+Alt+F formata.

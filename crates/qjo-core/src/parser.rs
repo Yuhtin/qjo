@@ -606,7 +606,8 @@ impl<'a> Parser<'a> {
         self.binario(0)
     }
 
-    fn op_bin(&self, nivel: u8) -> Option<OpBin> {
+    /// O operador binário atual e seu nível de precedência (0 = ||, 5 = * / %).
+    fn op_bin(&self) -> Option<(OpBin, u8)> {
         let t = self.cur()?;
         let l = self.lex(t);
         let op = match (t.tipo, l) {
@@ -633,15 +634,16 @@ impl<'a> Parser<'a> {
             OpBin::Soma | OpBin::Sub => 4,
             _ => 5,
         };
-        (n == nivel).then_some(op)
+        Some((op, n))
     }
 
-    fn binario(&mut self, nivel: u8) -> R<Expr> {
-        if nivel > 5 {
-            return self.unario();
-        }
-        let mut l = self.binario(nivel + 1)?;
-        while let Some(op) = self.op_bin(nivel) {
+    /// Precedência por escalada (Pratt): um laço por nível mínimo, associando à esquerda.
+    fn binario(&mut self, minimo: u8) -> R<Expr> {
+        let mut l = self.unario()?;
+        while let Some((op, nivel)) = self.op_bin() {
+            if nivel < minimo {
+                break;
+            }
             let ot = self.avanca();
             let r = self.binario(nivel + 1)?;
             let span = l.span.juntar(r.span);

@@ -160,7 +160,21 @@ impl<'a> Lexer<'a> {
     }
 
     /// Avança um ponto de código, atualizando linha e coluna.
+    #[inline]
     fn avanca(&mut self) {
+        // Caminho rápido: quase todo fonte é ASCII, e aí um byte é um ponto de código.
+        if let Some(&b) = self.b.get(self.i)
+            && b < 0x80
+        {
+            self.i += 1;
+            if b == b'\n' {
+                self.linha += 1;
+                self.col = 1;
+            } else {
+                self.col += 1;
+            }
+            return;
+        }
         let Some(c) = self.atual() else { return };
         self.i += c.len_utf8();
         if c == '\n' {
@@ -536,7 +550,7 @@ fn sugerir_duracao(c: &str) -> Option<String> {
             let (un, r2) = r.split_at(l);
             let un = match un.to_ascii_lowercase().as_str() {
                 "h" | "hr" | "hrs" | "hora" | "horas" => "h",
-                "m" | "min" | "mins" | "minuto" | "minutos" => "min",
+                "m" | "mn" | "mi" | "min" | "mins" | "minuto" | "minutos" => "min",
                 "s" | "seg" | "segs" | "sec" | "segundo" | "segundos" => "s",
                 _ => return None,
             };
@@ -714,6 +728,7 @@ mod testes {
         }
         assert_eq!(sugerir_duracao("30seg").as_deref(), Some("30s"));
         assert_eq!(sugerir_duracao("2minx").as_deref(), Some("2min"));
+        assert_eq!(sugerir_duracao("1mn").as_deref(), Some("1min"));
     }
 
     #[test]

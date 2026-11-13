@@ -179,6 +179,8 @@ struct Maquina<'a, D: Dispositivo> {
     abertos: Vec<u32>,
     linha: String,
     pausa_limite: Option<i64>,
+    /// Todos os quadros (rotina e funções) numa pilha só: chamar não aloca.
+    pilha: Vec<Valor>,
 }
 
 impl<'a, D: Dispositivo> Maquina<'a, D> {
@@ -247,8 +249,9 @@ impl<'a, D: Dispositivo> Maquina<'a, D> {
             self.passos = 0;
             self.abertos.clear();
             self.emite(format_args!("ROTINA {}", r.nome));
-            let mut quadro = vec![Valor::Vazio; r.nslots as usize];
-            let res = self.bloco(&r.corpo, &mut quadro);
+            self.pilha.clear();
+            self.pilha.resize(r.nslots as usize, Valor::Vazio);
+            let res = self.bloco(&r.corpo, 0);
             if matches!(res, Err(Fluxo::Pausa)) {
                 return Execucao {
                     rotinas,
@@ -271,47 +274,47 @@ impl<'a, D: Dispositivo> Maquina<'a, D> {
         }
     }
 
-    fn bloco(&mut self, b: &'a Bloco, q: &mut [Valor]) -> R<()> {
+    fn bloco(&mut self, b: &'a Bloco, base: usize) -> R<()> {
         for s in &b.cmds {
-            self.comando(s, q)?;
+            self.comando(s, base)?;
         }
         Ok(())
     }
 
-    fn comando(&mut self, s: &'a Stmt, q: &mut [Valor]) -> R<()> {
+    fn comando(&mut self, s: &'a Stmt, base: usize) -> R<()> {
         match &s.k {
             StmtK::Decl { valor, slot, .. } => {
-                q[*slot as usize] = self.expr(valor, q)?;
+                self.pilha[base + *slot as usize] = self.expr(valor, base)?;
             }
             StmtK::Atrib { valor, res, .. } => {
-                let v = self.expr(valor, q)?;
+                let v = self.expr(valor, base)?;
                 if let Res::Local(slot) = res {
-                    q[*slot as usize] = v;
+                    self.pilha[base + *slot as usize] = v;
                 }
             }
             StmtK::Expr(e) => {
-                self.expr(e, q)?;
+                self.expr(e, base)?;
             }
             StmtK::Se { ramos, senao } => {
                 for (c, b) in ramos {
-                    if self.logico(c, q)? {
-                        return self.bloco(b, q);
+                    if self.logico(c, base)? {
+                        return self.bloco(b, base);
                     }
                 }
                 if let Some(b) = senao {
-                    self.bloco(b, q)?;
+                    self.bloco(b, base)?;
                 }
             }
             StmtK::Enquanto { cond, corpo } => {
-                while self.logico(cond, q)? {
+                while self.logico(cond, base)? {
                     self.passo()?;
-                    self.bloco(corpo, q)?;
+                    self.bloco(corpo, base)?;
                 }
             }
             StmtK::Faca { corpo, cond } => loop {
                 self.passo()?;
-                self.bloco(corpo, q)?;
-                if !self.logico(cond, q)? {
+                self.bloco(corpo, base)?;
+                if !self.logico(cond, base)? {
                     break;
                 }
             },
@@ -323,23 +326,23 @@ impl<'a, D: Dispositivo> Maquina<'a, D> {
                 slot,
                 ..
             } => {
-                q[*slot as usize] = self.expr(ini, q)?;
-                while self.logico(cond, q)? {
+                self.pilha[base + *slot as usize] = self.expr(ini, base)?;
+                while self.logico(cond, base)? {
                     self.passo()?;
-                    self.bloco(corpo, q)?;
-                    q[*slot as usize] = self.expr(upd, q)?;
+                    self.bloco(corpo, base)?;
+                    self.pilha[base + *slot as usize] = self.expr(upd, base)?;
                 }
             }
             StmtK::Retorna { valor } => {
                 let v = match valor {
-                    Some(e) => self.expr(e, q)?,
+                    Some(e) => self.expr(e, base)?,
                     None => Valor::Vazio,
                 };
                 return Err(Fluxo::Retorno(v));
             }
             StmtK::Etapa { nome, corpo, .. } => {
                 self.emite(format_args!("ETAPA {nome}"));
-                let r = self.bloco(corpo, q);
+                let r = self.bloco(corpo, base);
                 if matches!(r, Err(Fluxo::Pausa)) {
                     return r;
                 }
@@ -350,14 +353,14 @@ impl<'a, D: Dispositivo> Maquina<'a, D> {
         Ok(())
     }
 
-    fn logico(&mut self, e: &'a Expr, q: &mut [Valor]) -> R<bool> {
-        match self.expr(e, q)? {
+    fn logico(&mut self, e: &'a Expr, base: usize) -> R<bool> {
+        match self.expr(e, base)? {
             Valor::Logico(b) => Ok(b),
             _ => erro("condição sem valor lógico"),
         }
     }
 
-    fn expr(&mut self, e: &'a Expr, q: &mut [Valor]) -> R<Valor> {
+    fn expr(&mut self, e: &'a Expr, base: usize) -> R<Valor> {
         Ok(match &e.k {
             ExprK::Num(n) => Valor::Num(*n),
             ExprK::Logico(b) => Valor::Logico(*b),
@@ -369,7 +372,7 @@ impl<'a, D: Dispositivo> Maquina<'a, D> {
             })),
             ExprK::Nulo => Valor::Nulo,
             ExprK::Nome { res, .. } => match *res {
-                Res::Local(s) => q[s as usize].clone(),
+                Res::Local(s) => self.pilha[base + s as usize].clone(),
                 Res::Global(g) => match &self.info.globais[g as usize].valor {
                     ValorGlobal::Recurso(_) => Valor::Recurso(g),
                     ValorGlobal::Data(d) => Valor::Data(*d),
@@ -378,57 +381,67 @@ impl<'a, D: Dispositivo> Maquina<'a, D> {
                 Res::EnumVal(t, v) => Valor::Enum(t, v),
                 _ => Valor::Vazio,
             },
-            ExprK::Chamada { args, res, .. } => {
-                let mut vals = Vec::with_capacity(args.len());
-                for a in args {
-                    vals.push(self.expr(a, q)?);
+            ExprK::Chamada { args, res, .. } => match *res {
+                Res::Prim(p) => {
+                    let a = match args.first() {
+                        Some(e) => self.expr(e, base)?,
+                        None => Valor::Vazio,
+                    };
+                    self.prim(p, a)?
                 }
-                match *res {
-                    Res::Prim(p) => self.prim(p, vals)?,
-                    Res::Funcao(i) => self.chamar(i, vals)?,
-                    _ => Valor::Vazio,
+                Res::Funcao(i) => {
+                    let Item::Funcao(f) = &self.prog.itens[self.info.funcoes[i as usize].item]
+                    else {
+                        return Ok(Valor::Vazio);
+                    };
+                    // Os argumentos vão para o topo da pilha e viram os primeiros slots do quadro novo.
+                    let topo = self.pilha.len();
+                    for a in args {
+                        let v = self.expr(a, base)?;
+                        self.pilha.push(v);
+                    }
+                    let tam = (f.nslots as usize).max(args.len());
+                    self.pilha.resize(topo + tam, Valor::Vazio);
+                    let r = self.bloco(&f.corpo, topo);
+                    self.pilha.truncate(topo);
+                    match r {
+                        Ok(()) => Valor::Vazio,
+                        Err(Fluxo::Retorno(v)) => v,
+                        Err(o) => return Err(o),
+                    }
                 }
-            }
-            ExprK::Unario { op, e } => match (op, self.expr(e, q)?) {
+                _ => Valor::Vazio,
+            },
+            ExprK::Unario { op, e } => match (op, self.expr(e, base)?) {
                 (OpUn::Nao, Valor::Logico(b)) => Valor::Logico(!b),
                 (OpUn::Menos, Valor::Num(n)) => Valor::Num(
                     n.checked_neg()
-                        .ok_or(Fluxo::Erro("estouro de num".into()))?,
+                        .ok_or_else(|| Fluxo::Erro("estouro de num".into()))?,
                 ),
                 _ => Valor::Vazio,
             },
             ExprK::Binario { op, l, r, .. } => {
                 match op {
-                    OpBin::E => return Ok(Valor::Logico(self.logico(l, q)? && self.logico(r, q)?)),
+                    OpBin::E => {
+                        return Ok(Valor::Logico(
+                            self.logico(l, base)? && self.logico(r, base)?,
+                        ));
+                    }
                     OpBin::Ou => {
-                        return Ok(Valor::Logico(self.logico(l, q)? || self.logico(r, q)?));
+                        return Ok(Valor::Logico(
+                            self.logico(l, base)? || self.logico(r, base)?,
+                        ));
                     }
                     _ => {}
                 }
-                let a = self.expr(l, q)?;
-                let b = self.expr(r, q)?;
+                let a = self.expr(l, base)?;
+                let b = self.expr(r, base)?;
                 binario(*op, a, b)?
             }
         })
     }
 
-    fn chamar(&mut self, i: u32, args: Vec<Valor>) -> R<Valor> {
-        let Item::Funcao(f) = &self.prog.itens[self.info.funcoes[i as usize].item] else {
-            return Ok(Valor::Vazio);
-        };
-        let mut quadro = vec![Valor::Vazio; f.nslots.max(f.params.len() as u32) as usize];
-        for (k, v) in args.into_iter().enumerate() {
-            quadro[k] = v;
-        }
-        match self.bloco(&f.corpo, &mut quadro) {
-            Ok(()) => Ok(Valor::Vazio),
-            Err(Fluxo::Retorno(v)) => Ok(v),
-            Err(o) => Err(o),
-        }
-    }
-
-    fn prim(&mut self, p: Prim, a: Vec<Valor>) -> R<Valor> {
-        let arg = a.first().cloned().unwrap_or(Valor::Vazio);
+    fn prim(&mut self, p: Prim, arg: Valor) -> R<Valor> {
         match (p, arg) {
             (_, Valor::Nulo) => {}
             (Prim::Instruir, Valor::Recurso(m)) => {
@@ -509,7 +522,7 @@ fn dur(v: i64) -> R<Valor> {
 
 fn num(v: Option<i32>) -> R<Valor> {
     v.map(Valor::Num)
-        .ok_or(Fluxo::Erro("estouro de num".into()))
+        .ok_or_else(|| Fluxo::Erro("estouro de num".into()))
 }
 
 fn binario(op: OpBin, a: Valor, b: Valor) -> R<Valor> {
@@ -562,6 +575,7 @@ pub fn executar<D: Dispositivo>(prog: &Programa, info: &Info, dev: &mut D) -> Ex
         abertos: vec![],
         linha: String::new(),
         pausa_limite: None,
+        pilha: Vec::with_capacity(256),
     };
     m.rodar()
 }

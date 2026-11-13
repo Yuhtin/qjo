@@ -2,6 +2,24 @@
 //! e coleta símbolos para as ferramentas de editor.
 
 use std::collections::HashMap;
+use std::hash::{BuildHasherDefault, Hasher};
+
+/// Hash FxHash (o do rustc): nomes curtos, sem necessidade de resistir a ataques.
+#[derive(Default)]
+struct Fx(u64);
+
+impl Hasher for Fx {
+    fn write(&mut self, bytes: &[u8]) {
+        for &b in bytes {
+            self.0 = (self.0.rotate_left(5) ^ b as u64).wrapping_mul(0x51_7c_c1_b7_27_22_0a_95);
+        }
+    }
+    fn finish(&self) -> u64 {
+        self.0
+    }
+}
+
+type Mapa<K, V> = HashMap<K, V, BuildHasherDefault<Fx>>;
 
 use crate::ast::*;
 use crate::diag::{Diagnostico, Fase, Linhas, Sugestao, mais_parecido};
@@ -118,7 +136,7 @@ struct Sema<'a> {
     linhas: Linhas<'a>,
     diags: Vec<Diagnostico>,
     info: Info,
-    globais: HashMap<String, (GDef, usize)>,
+    globais: Mapa<String, (GDef, usize)>,
     escopos: Vec<Vec<Local>>,
     ctx: Ctx,
     chamadas: Vec<Vec<(u32, Span)>>,
@@ -1261,7 +1279,7 @@ pub fn checar(src: &str, prog: &mut Programa) -> Checado {
         linhas: Linhas::new(src),
         diags: vec![],
         info: Info::default(),
-        globais: HashMap::new(),
+        globais: Mapa::default(),
         escopos: vec![],
         ctx: Ctx {
             retorno: None,

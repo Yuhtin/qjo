@@ -30,7 +30,7 @@ eventos, alertas, esperas...), medido a partir do registro do interpretador.
 
 A máquina de build da Vercel não tem Rust, então o build é feito aqui e só o resultado sobe
 (`vercel build` + `vercel deploy --prebuilt`). O projeto na Vercel é `qjo-web`, no time
-`bitsbrs-projects`.
+`bitsbrs-projects`, e a produção responde em https://qjo.daviduarte.com.br.
 
 Na primeira vez, ligue a pasta ao projeto:
 
@@ -47,6 +47,11 @@ npm run deploy
 ```
 
 O script passa `--environment preview` de propósito: num projeto sem Git conectado, o
-`vercel deploy` sem esse parâmetro publica em produção.
+`vercel deploy` sem esse parâmetro publica em produção. Para publicar em produção
+(qjo.daviduarte.com.br):
+
+```sh
+npm run deploy:prod
+```
 
 O `vercel.json` aponta `buildCommand` para `npm run build` e a saída para `dist/`.

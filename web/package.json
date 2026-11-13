@@ -10,7 +10,8 @@
     "prebuild": "npm run wasm",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "deploy": "npx --yes vercel@latest build && npx --yes vercel@latest deploy --prebuilt --environment preview"
+    "deploy": "npx --yes vercel@latest build && npx --yes vercel@latest deploy --prebuilt --environment preview",
+    "deploy:prod": "npx --yes vercel@latest build --prod && npx --yes vercel@latest deploy --prebuilt --prod"
   },
   "devDependencies": {
     "typescript": "^7.0.2",

@@ -3,6 +3,8 @@
 Suporte à linguagem [Q?JO!](https://github.com/Yuhtin/qjo). Todo o entendimento da linguagem
 vem do servidor `qjo-lsp`, que já vem dentro da extensão.
 
+![Erro em 30seg explicado ao passar o mouse, com a correção rápida Escrever 30s](https://raw.githubusercontent.com/Yuhtin/qjo/main/docs/imagens/vscode.png)
+
 - **Erros enquanto você digita**, com o código (`E_LEX_LITERAL`, `E_SEM_NOME`…) e a linha certa.
 - **Correção rápida** (`Cmd+.` / `Ctrl+.`): `30seg` → `30s`, `q` → `q?`, `;` que faltou, "você quis dizer camisa?".
 - **Autocompletar** do que está visível no ponto, com trechos prontos (`rotina`, `etapa`, `confirmar ou cancelar`).

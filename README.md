@@ -144,6 +144,8 @@ autocompletar, ir para a definição, formatar ao salvar e o simulador no termin
 ([detalhes](editors/vscode/README.md)). Para Zed, Neovim ou Helix, aponte o editor para o
 `qjo-lsp` em arquivos `.qjo`.
 
+![VS Code com o erro em 30seg explicado ao passar o mouse e a correção rápida Escrever 30s aberta](docs/imagens/vscode.png)
+
 ## O que tem aqui
 
 | Pasta | O que é |

@@ -215,7 +215,6 @@ function renderSolucao() {
 function recompilar(e: EstadoAnalise) {
   const a = e.analise;
   comp = { src: e.texto, analise: a, cpp: a.ok ? qjo.cpp(e.texto) : "" };
-  renderPipeline();
   renderDiags();
   renderTokens();
   renderCpp();
@@ -227,18 +226,6 @@ function recompilar(e: EstadoAnalise) {
 }
 
 const erros = () => comp.analise.diagnosticos;
-
-function renderPipeline() {
-  const tem = (f: string) => erros().some((e) => e.fase === f);
-  const lexBad = tem("léxico");
-  const sinBad = tem("sintaxe");
-  const semBad = tem("semântica");
-  const set = (id: string, st: string) => ($(id).className = "stage " + st);
-  set("st-lex", lexBad ? "bad" : "ok");
-  set("st-sin", lexBad ? "idle" : sinBad ? "bad" : "ok");
-  set("st-sem", lexBad || sinBad ? "idle" : semBad ? "bad" : "ok");
-  set("st-cpp", comp.cpp ? "ok" : "idle");
-}
 
 const FASE_LABEL: Record<string, string> = {
   "léxico": "erro de escrita (léxico)",

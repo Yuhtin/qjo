@@ -46,12 +46,6 @@ h1, h2, h3 { text-wrap: balance; }
 .crumb .sep { color: var(--muted); }
 .crumb .where { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .top-actions { display: flex; gap: 8px; margin-inline-start: auto; flex-wrap: wrap; }
-.pipeline { display: flex; gap: 4px; align-items: center; }
-.stage { font: 500 11px/1 var(--f-code); padding: 6px 9px; border-radius: 99px; color: var(--muted); background: var(--sunk); transition: background-color 150ms ease, color 150ms ease; }
-.stage.ok { color: var(--ok); background: var(--ok-soft); }
-.stage.bad { color: var(--bad); background: var(--bad-soft); }
-.stage.idle { opacity: .5; }
-.pipeline .arrow { color: var(--muted); font-size: 11px; }
 
 /* ---- botões ---- */
 .btn { display: inline-flex; align-items: center; gap: 8px; border: 0; background: var(--panel); box-shadow: 0 0 0 1px var(--line), var(--shadow);
@@ -261,7 +255,6 @@ dialog.modal::backdrop { background: rgb(0 0 0 / 0.45); transition: background-c
   .editor { min-height: 420px; }
   .work { padding-block: 12px; padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
   .m-grid { grid-template-columns: minmax(0, 1fr); }
-  .pipeline { order: 3; width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
   dialog.modal, dialog.modal:not([open]) { transform: none; }
@@ -270,4 +263,4 @@ dialog.modal::backdrop { background: rgb(0 0 0 / 0.45); transition: background-c
   .toast, .toast.show { transform: translate(-50%, 0); }
 }
 /* sem ligaduras: != e == precisam aparecer como se digita. Fica no fim porque o atalho font: reseta isso */
-code, pre, textarea, #editor .cm-scroller, #editor .cm-gutters, #editor .cm-tooltip-autocomplete, pre.code, pre.trace, .mono, .chip, .pill, .stage, .fname, .lbl, .input-line, .tok-table, .checks td, .ex-card code, .diag .code, .diag .pos { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+code, pre, textarea, #editor .cm-scroller, #editor .cm-gutters, #editor .cm-tooltip-autocomplete, pre.code, pre.trace, .mono, .chip, .pill, .fname, .lbl, .input-line, .tok-table, .checks td, .ex-card code, .diag .code, .diag .pos { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }

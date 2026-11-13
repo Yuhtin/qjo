@@ -1,0 +1,15 @@
+[package]
+name = "qjo-wasm"
+description = "O núcleo da Q?JO! para o navegador (WebAssembly, sem dependências)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+qjo-core = { path = "../qjo-core" }

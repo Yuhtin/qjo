@@ -1,6 +1,9 @@
 //! `qjo-lsp`: servidor de linguagem da Q?JO! pela entrada e saída padrão.
 //! Funciona com qualquer editor que fale LSP (VS Code, Cursor, Zed, Neovim, Helix…).
 
+// O Uri do lsp-types tem cache interno; usar como chave é o que a própria API pede.
+#![allow(clippy::mutable_key_type)]
+
 use std::collections::HashMap;
 use std::error::Error;
 

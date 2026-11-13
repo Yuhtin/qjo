@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/qjo-core", "crates/qjo-cli", "crates/qjo-lsp"]
+members = ["crates/qjo-core", "crates/qjo-cli", "crates/qjo-lsp", "crates/qjo-wasm"]
 
 [workspace.package]
 version = "0.1.0"

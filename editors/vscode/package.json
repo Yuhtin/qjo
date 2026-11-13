@@ -1,0 +1,147 @@
+{
+  "name": "qjo",
+  "displayName": "Q?JO!",
+  "description": "Linguagem Q?JO!: erros enquanto digita, correção rápida, autocompletar, renomear, formatar, rodar a rotina e gerar C++.",
+  "version": "0.1.0",
+  "publisher": "yuhtin",
+  "license": "MIT",
+  "icon": "icons/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Yuhtin/qjo"
+  },
+  "homepage": "https://github.com/Yuhtin/qjo",
+  "engines": {
+    "vscode": "^1.82.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "keywords": [
+    "qjo",
+    "q?jo!",
+    "queijo",
+    "dsl",
+    "lsp"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "languages": [
+      {
+        "id": "qjo",
+        "aliases": [
+          "Q?JO!",
+          "qjo"
+        ],
+        "extensions": [
+          ".qjo"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/arquivo.svg",
+          "dark": "./icons/arquivo.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "qjo",
+        "scopeName": "source.qjo",
+        "path": "./syntaxes/qjo.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "qjo.rodar",
+        "title": "Rodar rotina",
+        "category": "Q?JO!",
+        "icon": "$(play)"
+      },
+      {
+        "command": "qjo.cpp",
+        "title": "Gerar C++",
+        "category": "Q?JO!",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "qjo.reiniciar",
+        "title": "Reiniciar servidor de linguagem",
+        "category": "Q?JO!"
+      }
+    ],
+    "menus": {
+      "editor/title/run": [
+        {
+          "command": "qjo.rodar",
+          "when": "editorLangId == qjo",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "qjo.cpp",
+          "when": "editorLangId == qjo",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "qjo.rodar",
+          "when": "editorLangId == qjo"
+        },
+        {
+          "command": "qjo.cpp",
+          "when": "editorLangId == qjo"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "qjo.rodar",
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "when": "editorTextFocus && editorLangId == qjo"
+      }
+    ],
+    "configuration": {
+      "title": "Q?JO!",
+      "properties": {
+        "qjo.servidor": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Caminho do `qjo-lsp`. Vazio: usa o que vem com a extensão, ou o do PATH."
+        },
+        "qjo.cli": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Caminho do `qjo` (rodar e gerar C++). Vazio: usa o que vem com a extensão, ou o do PATH."
+        }
+      }
+    },
+    "configurationDefaults": {
+      "[qjo]": {
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --minify",
+    "servidor": "node scripts/servidor.mjs",
+    "test": "npm run build && npm run servidor && node test/run.mjs",
+    "package": "npm run build && npm run servidor && vsce package"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "@types/vscode": "^1.82.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.1.1",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
+  }
+}

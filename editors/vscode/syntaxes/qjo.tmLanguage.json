@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Q?JO!",
+  "scopeName": "source.qjo",
+  "patterns": [{ "include": "#tudo" }],
+  "repository": {
+    "tudo": {
+      "patterns": [
+        { "name": "comment.line.number-sign.qjo", "match": "#.*$" },
+        {
+          "name": "string.other.date.qjo",
+          "match": "\\b(data)(\")(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}|\\d{2}:\\d{2}:\\d{2})(\")",
+          "captures": {
+            "1": { "name": "storage.modifier.date.qjo" },
+            "2": { "name": "punctuation.definition.string.begin.qjo" },
+            "4": { "name": "punctuation.definition.string.end.qjo" }
+          }
+        },
+        {
+          "name": "string.quoted.double.qjo",
+          "begin": "\"",
+          "end": "\"|$",
+          "patterns": [
+            { "name": "constant.character.escape.qjo", "match": "\\\\[\"\\\\n]" },
+            { "name": "invalid.illegal.escape.qjo", "match": "\\\\." }
+          ]
+        },
+        { "name": "keyword.control.conditional.qjo", "match": "(?<![A-Za-z0-9_])(?:qjo\\?|q\\?|jo!)" },
+        { "name": "keyword.control.qjo", "match": "\\b(?:para|enquanto|faca|retorna)\\b" },
+        {
+          "match": "\\b(rotina|etapa)\\s*(\\()\\s*(\"[^\"]*\")?",
+          "captures": {
+            "1": { "name": "keyword.other.block.qjo" },
+            "3": { "name": "entity.name.section.qjo" }
+          }
+        },
+        {
+          "match": "\\b(funcao)\\b(?:\\s+([A-Za-z][A-Za-z0-9_]*))?\\s+([A-Za-z][A-Za-z0-9_]*)\\s*(?=\\()",
+          "captures": {
+            "1": { "name": "storage.type.function.qjo" },
+            "2": { "name": "storage.type.qjo" },
+            "3": { "name": "entity.name.function.qjo" }
+          }
+        },
+        {
+          "match": "\\b(enum)\\s+([A-Za-z][A-Za-z0-9_]*)",
+          "captures": { "1": { "name": "storage.type.enum.qjo" }, "2": { "name": "entity.name.type.enum.qjo" } }
+        },
+        { "name": "storage.type.qjo", "match": "\\b(?:num|texto|logico|enum|data|duracao|objeto|mensagem|resultado|evento|intensidade)\\b" },
+        { "name": "constant.language.qjo", "match": "\\b(?:verdadeiro|falso|nulo)\\b" },
+        {
+          "name": "support.function.builtin.qjo",
+          "match": "\\b(?:INSTRUIR|INDICAR|PARAR_INDICACAO|AGUARDAR_CONFIRMACAO|ALERTAR|ESPERAR|REGISTRAR|AGORA|TEMPO_DE_RESPOSTA)\\b"
+        },
+        { "name": "constant.other.enum.qjo", "match": "\\b[A-Z][A-Z0-9_]*\\b" },
+        { "name": "constant.numeric.duration.qjo", "match": "\\b\\d+(?:h(?:\\d+min)?(?:\\d+s)?|min(?:\\d+s)?|s)\\b" },
+        { "name": "constant.numeric.integer.qjo", "match": "\\b\\d+\\b" },
+        { "name": "keyword.operator.comparison.qjo", "match": "==|!=|<=|>=|<|>" },
+        { "name": "keyword.operator.logical.qjo", "match": "&&|\\|\\||!" },
+        { "name": "keyword.operator.assignment.qjo", "match": "=" },
+        { "name": "keyword.operator.arithmetic.qjo", "match": "[-+*/%]" },
+        { "match": "\\b([a-z][A-Za-z0-9_]*)\\s*(?=\\()", "captures": { "1": { "name": "entity.name.function.call.qjo" } } }
+      ]
+    }
+  }
+}

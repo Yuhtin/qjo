@@ -1,0 +1,72 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  binarios:
+    name: ${{ matrix.vsce }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, alvo: x86_64-unknown-linux-gnu, vsce: linux-x64 }
+          - { os: ubuntu-24.04-arm, alvo: aarch64-unknown-linux-gnu, vsce: linux-arm64 }
+          - { os: macos-14, alvo: aarch64-apple-darwin, vsce: darwin-arm64 }
+          - { os: macos-14, alvo: x86_64-apple-darwin, vsce: darwin-x64 }
+          - { os: windows-latest, alvo: x86_64-pc-windows-msvc, vsce: win32-x64 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.alvo }}
+      - run: cargo build --release --target ${{ matrix.alvo }} -p qjo-cli -p qjo-lsp
+      - name: Empacotar binários
+        shell: bash
+        run: |
+          d=qjo-${{ github.ref_name }}-${{ matrix.vsce }}
+          mkdir "$d"
+          ext=""; [[ "${{ matrix.alvo }}" == *windows* ]] && ext=".exe"
+          cp target/${{ matrix.alvo }}/release/qjo$ext target/${{ matrix.alvo }}/release/qjo-lsp$ext README.md LICENSE "$d"/
+          if [[ -n "$ext" ]]; then 7z a "$d.zip" "$d" > /dev/null; else tar czf "$d.tar.gz" "$d"; fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Extensão para esta plataforma
+        shell: bash
+        working-directory: editors/vscode
+        env:
+          QJO_BINARIOS: ${{ github.workspace }}/target/${{ matrix.alvo }}/release
+          QJO_ALVO: ${{ matrix.vsce }}
+        run: |
+          npm ci
+          npm run build
+          npm run servidor
+          npx vsce package --target ${{ matrix.vsce }} -o ../../qjo-${{ matrix.vsce }}.vsix
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qjo-${{ matrix.vsce }}
+          path: |
+            qjo-*.tar.gz
+            qjo-*.zip
+            qjo-*.vsix
+
+  publicar:
+    needs: binarios
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            qjo-*.tar.gz
+            qjo-*.zip
+            qjo-*.vsix
+          generate_release_notes: true

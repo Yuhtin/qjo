@@ -300,6 +300,29 @@ pub fn definicao_json(src: &str, off16: u32) -> String {
     }
 }
 
+/// Saída do léxico no formato de `qjo tokens --json`: `[{linha, coluna, token, lexema}]`.
+pub fn tokens_json(src: &str) -> String {
+    let lx = qjo_core::lex(src);
+    let mut o = String::with_capacity(src.len() * 6);
+    o.push('[');
+    for (i, t) in lx.tokens.iter().enumerate() {
+        if i > 0 {
+            o.push(',');
+        }
+        let _ = write!(
+            o,
+            "{{\"linha\":{},\"coluna\":{},\"token\":\"{}\",\"lexema\":",
+            t.linha,
+            t.coluna,
+            t.tipo.nome()
+        );
+        js(&mut o, t.lexema(src));
+        o.push('}');
+    }
+    o.push(']');
+    o
+}
+
 pub fn cpp_texto(src: &str) -> String {
     let a = analisar(src);
     if a.ok() {
@@ -372,6 +395,11 @@ pub extern "C" fn qjo_definicao(p: *const u8, n: usize, off16: u32) {
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn qjo_tokens(p: *const u8, n: usize) {
+    guardar(tokens_json(texto(p, n)));
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn qjo_cpp(p: *const u8, n: usize) {
     guardar(cpp_texto(texto(p, n)));
 }
@@ -392,6 +420,8 @@ mod testes {
         assert!(j.starts_with("{\"ok\":true"));
         // "data" começa no byte 13 ("ação ✓" tem 3 bytes a mais em UTF-8 que em UTF-16).
         assert!(j.contains("[\"tipo\",9,13]"), "{j}");
+        let t = tokens_json(src);
+        assert!(t.starts_with("[{\"linha\":1,\"coluna\":1,\"token\":\"COMENT\""), "{t}");
         let e = executar_json(src, "");
         assert!(e.contains("\"pausada\":30"), "{e}");
         let e = executar_json(src, "AJUDA 2");

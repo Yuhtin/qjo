@@ -1,202 +1,143 @@
-// CodeMirror 6 com a análise do qjo-wasm: realce por tokens, diagnósticos com correção,
-// dica ao passar o mouse, autocompletar com trechos e ir à definição com Cmd/Ctrl+clique.
+// CodeMirror 6 com a análise do qjo-wasm, vestido como o editor da QueijoCode: mesmas classes
+// de cor, erro sublinhado em onda, número da linha em vermelho. Por baixo continuam a dica ao
+// passar o mouse, o autocompletar com trechos e ir à definição com Cmd/Ctrl+clique.
 
-import { EditorState, StateEffect, StateField, type Extension, RangeSetBuilder } from "@codemirror/state";
+import { EditorState, RangeSet, RangeSetBuilder, StateField, type Extension } from "@codemirror/state";
 import {
-  Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, keymap, lineNumbers,
-  highlightActiveLine, highlightActiveLineGutter, drawSelection, hoverTooltip, highlightSpecialChars,
-  rectangularSelection, crosshairCursor, dropCursor,
+  Decoration, type DecorationSet, EditorView, GutterMarker, ViewPlugin, WidgetType, keymap, lineNumbers,
+  gutterLineClass, drawSelection, hoverTooltip, highlightSpecialChars, dropCursor,
 } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
-import { indentUnit, bracketMatching, indentOnInput } from "@codemirror/language";
-import { type Diagnostic, setDiagnostics, lintGutter, lintKeymap } from "@codemirror/lint";
+import { indentUnit, indentService } from "@codemirror/language";
 import {
   autocompletion, type Completion, type CompletionContext, type CompletionResult, snippetCompletion,
-  closeBrackets, closeBracketsKeymap, completionKeymap,
+  completionKeymap,
 } from "@codemirror/autocomplete";
-import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
+import { searchKeymap } from "@codemirror/search";
 import * as qjo from "./qjo";
 
-// ---------- análise compartilhada ----------
+// ---------- análise ----------
 
 export interface EstadoAnalise { texto: string; analise: qjo.Analise }
 
-const definirAnalise = StateEffect.define<EstadoAnalise>();
+const analisar = (texto: string): EstadoAnalise => ({ texto, analise: qjo.analisar(texto) });
 
-export const campoAnalise = StateField.define<EstadoAnalise | null>({
-  create: () => null,
-  update(v, tr) {
-    for (const e of tr.effects) if (e.is(definirAnalise)) return e.value;
-    return v;
-  },
+/** A análise acompanha o documento a cada mudança (o núcleo leva menos de 1 ms). */
+export const campoAnalise = StateField.define<EstadoAnalise>({
+  create: (st) => analisar(st.doc.toString()),
+  update: (v, tr) => (tr.docChanged ? analisar(tr.newDoc.toString()) : v),
 });
 
+/** Categoria do qjo-wasm -> classe de cor da QueijoCode. */
+const CLASSE: Partial<Record<qjo.Categoria, string>> = {
+  controle: "kw", bloco: "kw", tipo: "ty", texto: "str", comentario: "com",
+  numero: "lit", duracao: "lit", data: "lit", constante: "lit", primitiva: "prim", enum: "enumv",
+};
+
+export function classeDe(cat: qjo.Categoria): string | undefined {
+  return CLASSE[cat];
+}
+
 const marcas = new Map<string, Decoration>();
-function marca(cat: string): Decoration {
-  let d = marcas.get(cat);
-  if (!d) {
-    d = Decoration.mark({ class: `tk-${cat}` });
-    marcas.set(cat, d);
-  }
+function marca(cls: string): Decoration {
+  let d = marcas.get(cls);
+  if (!d) marcas.set(cls, (d = Decoration.mark({ class: cls })));
   return d;
 }
 
 // Com erro de léxico ou sintaxe a semântica não roda e todo identificador vira "nome".
 // Para as cores não piscarem enquanto se digita, use a categoria da última análise sem erros.
-let categoriasConhecidas = new Map<string, qjo.Categoria>();
+let conhecidas = new Map<string, qjo.Categoria>();
 
-function decoracoes(a: qjo.Analise, texto: string): DecorationSet {
-  const tam = texto.length;
+function realce(e: EstadoAnalise): DecorationSet {
+  const { analise: a, texto } = e;
   if (a.ok) {
     const m = new Map<string, qjo.Categoria>();
     for (const [cat, ini, fim] of a.tokens) if (cat !== "nome" && /^[A-Za-z]/.test(texto[ini])) m.set(texto.slice(ini, fim), cat);
-    categoriasConhecidas = m;
+    conhecidas = m;
   }
   const b = new RangeSetBuilder<Decoration>();
   for (let [cat, ini, fim] of a.tokens) {
-    if (cat === "pontuacao" || fim <= ini || fim > tam) continue;
-    if (!a.ok && cat === "nome") cat = categoriasConhecidas.get(texto.slice(ini, fim)) ?? cat;
-    b.add(ini, fim, marca(cat));
+    if (fim <= ini || fim > texto.length) continue;
+    if (!a.ok && cat === "nome") cat = conhecidas.get(texto.slice(ini, fim)) ?? cat;
+    const cls = CLASSE[cat];
+    if (cls) b.add(ini, fim, marca(cls));
   }
   return b.finish();
 }
 
-// Entre uma edição e a próxima análise, as marcas acompanham o texto (map).
-const campoRealce = StateField.define<DecorationSet>({
-  create: () => Decoration.none,
-  update(deco, tr) {
-    for (const e of tr.effects) {
-      if (e.is(definirAnalise)) return decoracoes(e.value.analise, e.value.texto);
+class PontoDeErro extends WidgetType {
+  toDOM() {
+    const s = document.createElement("span");
+    s.className = "errpt";
+    return s;
+  }
+  eq() {
+    return true;
+  }
+}
+const pontoErro = Decoration.widget({ widget: new PontoDeErro(), side: 1 });
+const trechoErro = Decoration.mark({ class: "err" });
+
+/** Erro com extensão: sublinhado em onda. Erro sem extensão (falta algo): um marcador no ponto. */
+function erros(e: EstadoAnalise): DecorationSet {
+  const { texto } = e;
+  const n = texto.length;
+  const faixas: { de: number; ate: number; d: Decoration }[] = [];
+  for (const d of e.analise.diagnosticos) {
+    const a = Math.min(d.ini, n);
+    const b = Math.min(Math.max(d.fim, d.ini), n);
+    if (b === a || a >= n || texto[a] === "\n") faixas.push({ de: a, ate: a, d: pontoErro });
+    else faixas.push({ de: a, ate: b, d: trechoErro });
+  }
+  faixas.sort((x, y) => x.de - y.de || x.ate - y.ate);
+  return Decoration.set(faixas.map((f) => f.d.range(f.de, f.ate)), true);
+}
+
+class LinhaComErro extends GutterMarker {
+  elementClass = "e";
+}
+const linhaErro = new LinhaComErro();
+
+function linhasComErro(st: EditorState): RangeSet<GutterMarker> {
+  const { analise } = st.field(campoAnalise);
+  const vistas = new Set<number>();
+  const pos: number[] = [];
+  for (const d of analise.diagnosticos) {
+    const l = st.doc.lineAt(Math.min(d.ini, st.doc.length));
+    if (!vistas.has(l.number)) {
+      vistas.add(l.number);
+      pos.push(l.from);
     }
-    return tr.docChanged ? deco.map(tr.changes) : deco;
-  },
-  provide: (f) => EditorView.decorations.from(f),
+  }
+  pos.sort((a, b) => a - b);
+  return RangeSet.of(pos.map((p) => linhaErro.range(p)));
+}
+
+// ---------- recuo (o mesmo da QueijoCode) ----------
+
+const recuoDe = (s: string) => /^[ \t]*/.exec(s)![0].replace(/\t/g, "    ").length;
+
+/** Enter depois de `{` entra um nível; fora isso mantém o recuo da linha. */
+const recuo = indentService.of((cx, pos) => {
+  // No Enter, lineAt(pos, -1) é o texto da linha até o cursor.
+  const antes = cx.lineAt(pos, -1).text;
+  return recuoDe(antes) + (/\{\s*$/.test(antes) ? 4 : 0);
 });
 
-function aplicarSugestao(view: EditorView, d: qjo.Diagnostico, texto: string) {
-  let sug = d.sugestao;
-  const atual = view.state.doc.toString();
-  if (atual !== texto) {
-    // O texto mudou desde a análise: pegue a sugestão equivalente na análise de agora.
-    const novo = qjo.analisar(atual).diagnosticos
-      .filter((x) => x.codigo === d.codigo && x.sugestao)
-      .sort((a, b) => Math.abs(a.ini - d.ini) - Math.abs(b.ini - d.ini))[0];
-    sug = novo?.sugestao ?? null;
-  }
-  if (!sug) return;
+/** `}` digitado numa linha só de espaços volta um nível. */
+const fechaChave = EditorView.inputHandler.of((view, from, to, texto) => {
+  if (texto !== "}") return false;
+  const linha = view.state.doc.lineAt(from);
+  const pre = linha.text.slice(0, from - linha.from);
+  if (!/^ {4,}$/.test(pre)) return false;
   view.dispatch({
-    changes: sug.edicoes.map((e) => ({ from: e.ini, to: e.fim, insert: e.texto })),
-    userEvent: "input.fix",
+    changes: { from: linha.from, to, insert: pre.slice(4) + "}" },
+    selection: { anchor: linha.from + pre.length - 3 },
+    userEvent: "input.type",
   });
-  view.focus();
-}
-
-function paraDiagnosticos(e: EstadoAnalise, tam: number): Diagnostic[] {
-  return e.analise.diagnosticos.map((d) => {
-    const from = Math.min(d.ini, tam);
-    const to = Math.min(Math.max(d.fim, d.ini), tam);
-    return {
-      from,
-      to,
-      severity: "error",
-      source: `${d.codigo} · ${d.fase}`,
-      message: d.mensagem,
-      renderMessage: () => {
-        const el = document.createElement("div");
-        el.className = "diag";
-        const cab = document.createElement("div");
-        cab.className = "diag-cab";
-        const cod = document.createElement("code");
-        cod.className = "diag-codigo";
-        cod.textContent = d.codigo;
-        const fase = document.createElement("span");
-        fase.className = "diag-fase";
-        fase.textContent = `${d.fase} · linha ${d.linha}, coluna ${d.coluna}`;
-        cab.append(cod, fase);
-        const msg = document.createElement("p");
-        msg.className = "diag-msg";
-        msg.textContent = d.mensagem;
-        el.append(cab, msg);
-        return el;
-      },
-      actions: d.sugestao
-        ? [{ name: d.sugestao.titulo, apply: (view: EditorView) => aplicarSugestao(view, d, e.texto) }]
-        : [],
-    };
-  });
-}
-
-type Ouvinte = (e: EstadoAnalise) => void;
-
-function plugAnalise(atraso: number, ouvir: Ouvinte) {
-  return ViewPlugin.fromClass(
-    class {
-      timer = 0;
-      constructor(readonly view: EditorView) {
-        // Primeira análise logo depois da montagem (não dá para despachar no construtor).
-        this.timer = window.setTimeout(() => this.rodar(), 0);
-      }
-      update(u: ViewUpdate) {
-        if (!u.docChanged) return;
-        clearTimeout(this.timer);
-        this.timer = window.setTimeout(() => this.rodar(), atraso);
-      }
-      rodar() {
-        const texto = this.view.state.doc.toString();
-        const est: EstadoAnalise = { texto, analise: qjo.analisar(texto) };
-        const diag = setDiagnostics(this.view.state, paraDiagnosticos(est, texto.length));
-        const efeitos = Array.isArray(diag.effects) ? diag.effects : diag.effects ? [diag.effects] : [];
-        this.view.dispatch({ effects: [definirAnalise.of(est), ...efeitos] });
-        ouvir(est);
-      }
-      destroy() {
-        clearTimeout(this.timer);
-      }
-    },
-  );
-}
-
-// ---------- quebra de linha com recuo ----------
-
-// Linhas quebradas continuam alinhadas ao recuo da linha, mais um nível.
-const recuoDecos = new Map<number, Decoration>();
-function recuoDeco(n: number): Decoration {
-  let d = recuoDecos.get(n);
-  if (!d) {
-    // O recuo é limitado a 35% da largura (padding e text-indent em % usam a mesma base).
-    d = Decoration.line({ attributes: { style: `--recuo: min(${n}ch, 35%)`, class: "cm-recuo" } });
-    recuoDecos.set(n, d);
-  }
-  return d;
-}
-
-function decoRecuo(view: EditorView): DecorationSet {
-  const b = new RangeSetBuilder<Decoration>();
-  for (const { from, to } of view.visibleRanges) {
-    for (let pos = from; pos <= to; ) {
-      const linha = view.state.doc.lineAt(pos);
-      const m = /^[ \t]*/.exec(linha.text)![0];
-      let col = 0;
-      for (const c of m) col += c === "\t" ? 4 : 1;
-      if (linha.length > 0) b.add(linha.from, linha.from, recuoDeco(col + 4));
-      pos = linha.to + 1;
-    }
-  }
-  return b.finish();
-}
-
-const recuoQuebra = ViewPlugin.fromClass(
-  class {
-    decorations: DecorationSet;
-    constructor(view: EditorView) {
-      this.decorations = decoRecuo(view);
-    }
-    update(u: ViewUpdate) {
-      if (u.docChanged || u.viewportChanged) this.decorations = decoRecuo(u.view);
-    }
-  },
-  { decorations: (v) => v.decorations },
-);
+  return true;
+});
 
 // ---------- dica ----------
 
@@ -207,20 +148,21 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, txt?: s
   return e;
 }
 
-/** Realça um trecho de código fora do editor usando os tokens do analisador. */
+/** Realça um trecho de código fora do editor com as mesmas classes. */
 export function realcarTrecho(codigo: string, destino: HTMLElement) {
   const toks = qjo.analisar(codigo).tokens;
   let pos = 0;
   for (const [cat, ini, fim] of toks) {
     if (ini > pos) destino.append(codigo.slice(pos, ini));
-    destino.append(el("span", `tk-${cat}`, codigo.slice(ini, fim)));
+    const cls = CLASSE[cat];
+    destino.append(cls ? el("span", cls, codigo.slice(ini, fim)) : codigo.slice(ini, fim));
     pos = fim;
   }
   if (pos < codigo.length) destino.append(codigo.slice(pos));
 }
 
 /** Markdown mínimo: blocos ```qjo, parágrafos, `código` e **negrito**. */
-export function markdown(md: string): HTMLElement {
+function markdown(md: string): HTMLElement {
   const raiz = el("div", "md");
   const partes = md.split(/```(\w*)\n([\s\S]*?)```/g);
   for (let i = 0; i < partes.length; i += 3) {
@@ -250,20 +192,15 @@ const dicaHover = hoverTooltip(
   (view, pos) => {
     const r = qjo.dica(view.state.doc.toString(), pos);
     if (!r) return null;
-    return {
-      pos: r.ini,
-      end: r.fim,
-      above: true,
-      create: () => ({ dom: markdown(r.md) }),
-    };
+    return { pos: r.ini, end: r.fim, above: true, create: () => ({ dom: markdown(r.md) }) };
   },
   { hoverTime: 350 },
 );
 
 // ---------- autocompletar ----------
 
-/** LSP `${1:x}`, `$1`, `$0` → CodeMirror `#{1:x}`, `#{1}`, `#{}`. */
-export function converterTrecho(s: string): string {
+/** LSP `${1:x}`, `$1`, `$0` -> CodeMirror `#{1:x}`, `#{1}`, `#{}`. */
+function converterTrecho(s: string): string {
   return s
     .replace(/\$\{(\d+):([^}]*)\}/g, (_, n, t) => (n === "0" ? `#{${t}}` : `#{${n}:${t}}`))
     .replace(/\$\{(\d+)\}/g, (_, n) => (n === "0" ? "#{}" : `#{${n}}`))
@@ -271,21 +208,12 @@ export function converterTrecho(s: string): string {
 }
 
 const tipoItem: Record<qjo.ItemCompletar["especie"], string> = {
-  palavra: "keyword",
-  tipo: "type",
-  primitiva: "function",
-  funcao: "method",
-  variavel: "variable",
-  constante: "constant",
-  enum: "enum",
-  trecho: "snippet",
+  palavra: "keyword", tipo: "type", primitiva: "function", funcao: "method",
+  variavel: "variable", constante: "constant", enum: "enum", trecho: "snippet",
 };
 
 const reforco: Partial<Record<qjo.ItemCompletar["especie"], number>> = {
-  variavel: 3,
-  constante: 2,
-  primitiva: 1,
-  trecho: -1,
+  variavel: 3, constante: 2, primitiva: 1, trecho: -1,
 };
 
 function fonteCompletar(ctx: CompletionContext): CompletionResult | null {
@@ -306,7 +234,7 @@ function fonteCompletar(ctx: CompletionContext): CompletionResult | null {
 
 // ---------- definição ----------
 
-export function irParaDefinicao(view: EditorView, pos: number): boolean {
+function irParaDefinicao(view: EditorView, pos: number): boolean {
   const d = qjo.definicao(view.state.doc.toString(), pos);
   if (!d) return false;
   view.dispatch({
@@ -322,12 +250,9 @@ const cliqueDefinicao = EditorView.domEventHandlers({
   mousedown(e, view) {
     if (!(e.metaKey || e.ctrlKey) || e.button !== 0) return false;
     const pos = view.posAtCoords({ x: e.clientX, y: e.clientY });
-    if (pos == null) return false;
-    if (irParaDefinicao(view, pos)) {
-      e.preventDefault();
-      return true;
-    }
-    return false;
+    if (pos == null || !irParaDefinicao(view, pos)) return false;
+    e.preventDefault();
+    return true;
   },
 });
 
@@ -374,61 +299,55 @@ export function formatarDoc(view: EditorView): boolean {
 export interface OpcoesEditor {
   pai: HTMLElement;
   texto: string;
-  aoAnalisar: Ouvinte;
-  aoMudar: (texto: string) => void;
+  /** Chamado com a análise nova sempre que o texto muda (e ao trocar de arquivo). */
+  aoMudar: (e: EstadoAnalise) => void;
   aoRodar: () => void;
   aoFormatar: () => void;
 }
 
 export interface Editor {
   view: EditorView;
-  /** Troca o texto inteiro (outro exemplo ou exercício), com histórico novo. */
+  texto(): string;
+  analise(): EstadoAnalise;
+  /** Troca o texto inteiro (outro exercício), com histórico novo. */
   trocar(texto: string): void;
+  /** Aplica edições de uma correção sugerida e põe o cursor no fim da última. */
+  editar(edicoes: qjo.Edicao[]): void;
+  irPara(ini: number, fim: number): void;
 }
 
 export function criarEditor(o: OpcoesEditor): Editor {
   const extensoes: Extension[] = [
     lineNumbers(),
-    highlightActiveLineGutter(),
+    gutterLineClass.compute([campoAnalise], linhasComErro),
     highlightSpecialChars(),
     history(),
     drawSelection(),
     dropCursor(),
-    EditorState.allowMultipleSelections.of(true),
-    indentOnInput(),
-    bracketMatching(),
-    closeBrackets(),
-    rectangularSelection(),
-    crosshairCursor(),
-    highlightActiveLine(),
-    highlightSelectionMatches(),
     indentUnit.of("    "),
-    EditorView.lineWrapping,
-    recuoQuebra,
     EditorState.tabSize.of(4),
+    recuo,
+    fechaChave,
     EditorView.contentAttributes.of({ "aria-label": "Código Q?JO!", spellcheck: "false", autocapitalize: "off", autocorrect: "off" }),
     campoAnalise,
-    campoRealce,
-    plugAnalise(140, o.aoAnalisar),
-    lintGutter(),
+    EditorView.decorations.compute([campoAnalise], (st) => realce(st.field(campoAnalise))),
+    EditorView.decorations.compute([campoAnalise], (st) => erros(st.field(campoAnalise))),
     dicaHover,
-    autocompletion({ override: [fonteCompletar], icons: true, activateOnTypingDelay: 60 }),
+    autocompletion({ override: [fonteCompletar], icons: false, activateOnTypingDelay: 60 }),
     cliqueDefinicao,
     teclaModificadora,
     keymap.of([
       { key: "Mod-Enter", run: () => (o.aoRodar(), true), preventDefault: true },
       { key: "Shift-Alt-f", run: () => (o.aoFormatar(), true), preventDefault: true },
       { key: "F12", run: (v) => irParaDefinicao(v, v.state.selection.main.head) },
-      ...closeBracketsKeymap,
       ...completionKeymap,
       ...defaultKeymap,
       ...searchKeymap,
       ...historyKeymap,
-      ...lintKeymap,
       indentWithTab,
     ]),
     EditorView.updateListener.of((u) => {
-      if (u.docChanged) o.aoMudar(u.state.doc.toString());
+      if (u.docChanged) o.aoMudar(u.state.field(campoAnalise));
     }),
   ];
   const view = new EditorView({
@@ -437,10 +356,27 @@ export function criarEditor(o: OpcoesEditor): Editor {
   });
   return {
     view,
+    texto: () => view.state.doc.toString(),
+    analise: () => view.state.field(campoAnalise),
     trocar(texto: string) {
-      // Um estado novo reinicia o histórico; o plugin de análise roda de novo ao ser recriado.
       view.setState(EditorState.create({ doc: texto, extensions: extensoes }));
       view.scrollDOM.scrollTop = 0;
+      o.aoMudar(view.state.field(campoAnalise));
+    },
+    editar(edicoes) {
+      const ord = [...edicoes].sort((a, b) => a.ini - b.ini);
+      const changes = view.state.changes(ord.map((e) => ({ from: e.ini, to: e.fim, insert: e.texto })));
+      const ult = ord[ord.length - 1];
+      const fim = ult ? changes.mapPos(ult.ini) + ult.texto.length : 0;
+      view.dispatch({ changes, selection: { anchor: Math.min(fim, changes.newLength) }, userEvent: "input.fix", scrollIntoView: true });
+      view.focus();
+    },
+    irPara(ini, fim) {
+      view.dispatch({
+        selection: { anchor: ini, head: Math.max(ini, fim) },
+        effects: EditorView.scrollIntoView(ini, { y: "center" }),
+      });
+      view.focus();
     },
   };
 }

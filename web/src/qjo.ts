@@ -36,6 +36,7 @@ export interface ItemCompletar {
   detalhe: string;
   snippet: string | null;
 }
+export interface TokenLexico { linha: number; coluna: number; token: string; lexema: string }
 export interface Dica { ini: number; fim: number; md: string }
 export interface Faixa { ini: number; fim: number }
 
@@ -51,6 +52,7 @@ interface Exports {
   qjo_dica(p: number, n: number, off16: number): void;
   qjo_definicao(p: number, n: number, off16: number): void;
   qjo_cpp(p: number, n: number): void;
+  qjo_tokens(p: number, n: number): void;
   qjo_formatar(p: number, n: number): void;
 }
 
@@ -133,6 +135,11 @@ export function dica(src: string, off: number): Dica | null {
 
 export function definicao(src: string, off: number): Faixa | null {
   return JSON.parse(chamar((p, n) => mod().qjo_definicao(p, n, off), src)) as Faixa | null;
+}
+
+/** Saída do léxico, no mesmo formato de `qjo tokens --json`. */
+export function tokens(src: string): TokenLexico[] {
+  return JSON.parse(chamar((p, n) => mod().qjo_tokens(p, n), src)) as TokenLexico[];
 }
 
 /** Texto C++17, ou "" se o programa tem erros. */

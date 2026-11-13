@@ -1,7 +1,12 @@
-# Playground da Q?JO!
+# QueijoCode
 
-Editor, simulador e gerador de C++ da Q?JO! no navegador. Vite + TypeScript + CodeMirror 6.
-O analisador é o próprio `qjo-core`, compilado para WebAssembly (`crates/qjo-wasm`).
+Editor, simulador, exercícios e gerador de C++ da Q?JO! no navegador. Vite + TypeScript +
+CodeMirror 6. O compilador é o próprio `qjo-core`, compilado para WebAssembly (`crates/qjo-wasm`).
+
+O visual é o da QueijoCode original (qjo.daviduarte.com.br): o mesmo layout, as mesmas cores e
+os mesmos componentes, copiados em `src/estilo.css`. Só o editor mudou por dentro: é o
+CodeMirror com o desenho do editor antigo, o que traz autocompletar, dica ao passar o mouse e
+ir à definição (Cmd/Ctrl+clique ou F12). Shift+Alt+F formata.
 
 ## Rodar localmente
 
@@ -18,7 +23,8 @@ npm run dev
 `public/qjo.wasm`, que não vai para o git. Sem `cargo` no PATH, o script usa o
 `public/qjo.wasm` que já existir.
 
-Os exemplos vêm direto de `../examples/*.qjo`; os exercícios estão em `src/exercicios.ts`.
+Os exercícios estão em `src/exercicios.ts`. Cada caso confere o que a rotina fez (como termina,
+eventos, alertas, esperas...), medido a partir do registro do interpretador.
 
 ## Deploy
 
